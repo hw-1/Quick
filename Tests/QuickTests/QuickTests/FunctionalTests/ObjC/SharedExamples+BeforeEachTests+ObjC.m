@@ -9,7 +9,7 @@ static NSUInteger sharedExamplesBeforeEachExecutedCount = 0;
 
 QuickConfigurationBegin(FunctionalTests_SharedExamples_BeforeEachTests_SharedExamples_ObjC)
 
-+ (void)configure:(QCKConfiguration *)configuration {
++ (void)configure:(Configuration *)configuration {
     sharedExamples(@"a group of three shared examples with a beforeEach in Obj-C",
                    ^(QCKDSLSharedExampleContext context) {
         beforeEach(^{ sharedExamplesBeforeEachExecutedCount += 1; });

@@ -5,8 +5,8 @@ import XCTest
 
 #if SWIFT_PACKAGE
 
-#if canImport(QuickObjCRuntime)
-import QuickObjCRuntime
+#if canImport(QuickSpecBase)
+import QuickSpecBase
 
 public typealias QuickSpecBase = _QuickSpecBase
 #else
@@ -57,22 +57,6 @@ open class QuickSpec: QuickSpecBase {
         return super.defaultTestSuite
     }
 
-    /// This method is used as a hook for injecting test methods into the
-    /// Objective-C runtime on individual test runs.
-    ///
-    /// When `xctest` runs a test on a single method, it does not call
-    /// `defaultTestSuite` on the test class but rather calls
-    /// `instancesRespondToSelector:` to build its own suite.
-    ///
-    /// In normal conditions, Quick uses the implicit call to `defaultTestSuite`
-    /// to both generate examples and inject them as methods by way of
-    /// `testInvocations`.  Under single test conditions, there's no implicit
-    /// call to `defaultTestSuite` so we make it explicitly here.
-    open override class func instancesRespond(to aSelector: Selector!) -> Bool {
-        _ = self.defaultTestSuite
-        return super.instancesRespond(to: aSelector)
-    }
-
     override open class func _qck_testMethodSelectors() -> [String] {
         let examples = World.sharedWorld.examples(forSpecClass: self)
 
@@ -83,31 +67,26 @@ open class QuickSpec: QuickSpecBase {
         }
     }
 
-    private static func addInstanceMethod(for example: Example, classSelectorNames selectorNames: inout Set<String>) -> Selector {
-        let block: @convention(block) (QuickSpec, @escaping () -> Void) -> Void = { spec, completionHandler in
+    private static func addInstanceMethod(for example: Example, classSelectorNames selectorNames : inout Set<String>) -> Selector {
+        let block: @convention(block) (QuickSpec) -> Void = { spec in
             spec.example = example
-            Task {
-                await example.run()
-                completionHandler()
-            }
+            example.run()
         }
         let implementation = imp_implementationWithBlock(block as Any)
 
         let originalName = example.name.c99ExtendedIdentifier
         var selectorName = originalName
-        var index: UInt = 2
+        var i: UInt = 2
 
-        while selectorNames.contains(selectorName.appending(":")) {
-            selectorName = String(format: "%@_%tu", originalName, index)
-            index += 1
+        while selectorNames.contains(selectorName) {
+            selectorName = String(format: "%@_%tu", originalName, i)
+            i += 1
         }
-
-        selectorName += ":"
 
         selectorNames.insert(selectorName)
 
         let selector = NSSelectorFromString(selectorName)
-        class_addMethod(self, selector, implementation, "v@:@?<v@?>")
+        class_addMethod(self, selector, implementation, "v@:")
 
         return selector
     }
@@ -119,10 +98,10 @@ open class QuickSpec: QuickSpecBase {
 
         let examples = World.sharedWorld.examples(forSpecClass: self)
         let result = examples.map { example -> (String, (QuickSpec) -> () throws -> Void) in
-            return (example.name, asyncTest { spec in
+            return (example.name, { spec in
                 return {
                     spec.example = example
-                    await example.run()
+                    example.run()
                 }
             })
         }
@@ -140,32 +119,6 @@ open class QuickSpec: QuickSpecBase {
         world.performWithCurrentExampleGroup(rootExampleGroup) {
             self.init().spec()
         }
-    }
-
-    // MARK: Delegation to `QuickSpec.current`.
-
-    override public func recordFailure(
-        withDescription description: String,
-        inFile filePath: String,
-        atLine lineNumber: Int,
-        expected: Bool
-    ) {
-        guard self === Self.current else {
-            Self.current.recordFailure(
-                withDescription: description,
-                inFile: filePath,
-                atLine: lineNumber,
-                expected: expected
-            )
-            return
-        }
-
-        super.recordFailure(
-            withDescription: description,
-            inFile: filePath,
-            atLine: lineNumber,
-            expected: expected
-        )
     }
 }
 

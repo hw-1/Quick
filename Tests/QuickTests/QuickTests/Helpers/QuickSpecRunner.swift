@@ -60,14 +60,6 @@ func qck_runSpecs(_ specClasses: [QuickSpec.Type]) -> XCTestRun? {
         world.isRunningAdditionalSuites = true
         defer { world.isRunningAdditionalSuites = false }
 
-        #if !SWIFT_PACKAGE
-        // Gather examples first
-        specClasses.forEach { specClass in
-            // This relies on `_QuickSpecInternal`.
-            (specClass as AnyClass).buildExamplesIfNeeded()
-        }
-        #endif
-
         let suite = XCTestSuite(name: "MySpecs")
         for specClass in specClasses {
             #if canImport(Darwin)

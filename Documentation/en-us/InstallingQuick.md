@@ -11,7 +11,8 @@ There are three recommended ways of linking Quick to your tests:
 1. [Git Submodules](#git-submodules)
 2. [CocoaPods](#cocoapods)
 3. [Carthage](#carthage)
-4. [Swift Package Manager (experimental)](#swift-package-manager)
+4. [Accio](#accio)
+5. [Swift Package Manager (experimental)](#swift-package-manager)
 
 Choose one and follow the instructions below. Once you've completed them,
 you should be able to `import Quick` from within files in your test target.
@@ -21,7 +22,7 @@ you should be able to `import Quick` from within files in your test target.
 To link Quick and Nimble using Git submodules:
 
 1. Add submodule for Quick.
-2. If you don't already have a `.xcworkspace` for your project, create one. ([Here's how](https://help.apple.com/xcode/mac/11.4/#/devf5378fca9))
+2. If you don't already have a `.xcworkspace` for your project, create one. ([Here's how](https://developer.apple.com/library/ios/recipes/xcode_help-structure_navigator/articles/Adding_an_Existing_Project_to_a_Workspace.html))
 3. Add `Quick.xcodeproj` to your project's `.xcworkspace`.
 4. Add `Nimble.xcodeproj` to your project's `.xcworkspace`. It exists in `path/to/Quick/Externals/Nimble`. By adding Nimble from Quick's dependencies (as opposed to adding directly as a submodule), you'll ensure that you're using the correct version of Nimble for whatever version of Quick you're using.
 5. Link `Quick.framework` and `Nimble.framework` in your test target's
@@ -54,12 +55,12 @@ Do the same for the `Nimble.framework`, and you're done!
 
 **Updating the Submodules:** If you ever want to update the Quick
 or Nimble submodules to latest version, enter the Quick directory
-and pull from the main repository:
+and pull from the master repository:
 
 ```sh
 cd /path/to/your/project/Vendor/Quick
-git checkout main
-git pull --rebase origin main
+git checkout master
+git pull --rebase origin master
 ```
 
 Your Git repository will track changes to submodules. You'll want to
@@ -140,61 +141,35 @@ to copy them to the target's Frameworks destination.
 This is not "the one and only way" to use Carthage to manage dependencies.
 For further reference check out the [Carthage documentation](https://github.com/Carthage/Carthage/blob/master/README.md).
 
-## [Swift Package Manager](https://github.com/apple/swift-package-manager)
+## [Accio](https://github.com/JamitLabs/Accio)
 
-With the advent of the [swift.org](https://swift.org) open-source project, Swift now has an official package manager tool. Notably, this provides the possibility of using Quick on non-Apple platforms for the first time. You can use Swift Package Manager either by using it's integration with Xcode, or by editing your package's `Package.swift` file.
-
-### Xcode Integration
-
-To install Quick via XCode's Swift Package Manager integration, select your .xcodeproj file, then the project tab, then the Package Dependencies tab. Click on the "plus" button at the bottom of the list, then follow the wizard to add Quick to your project. Specify `https://github.com/Quick/Quick.git` as the url, and be sure to add Quick as a dependency of your unit test target, not your app target.
-
-### Package.swift
-
-Add Quick's github url as a dependency of your package, then as a dependency of your test target, like so:
+Add the following to your Package.swift:
 
 ```swift
-// swift-tools-version:5.5
+.package(url: "https://github.com/Quick/Quick.git", .upToNextMajor(from: "2.0.0")),
+```
 
-import PackageDescription
+Next, add `Quick` to your App test targets dependencies like so:
 
-let package = Package(
-    name: "MyPackage",
-    products: [
-    	.library(name: "MyPackage", targets: ["MyPackage"])
-    ],
+```swift
+.testTarget(
+    name: "AppTests",
     dependencies: [
-        .package(url: "https://github.com/Quick/Quick.git", from: "5.0.0"),
-        .package(url: "https://github.com/Quick/Nimble.git", from: "10.0.0"),
+        "Quick",
     ]
-    targets: [
-    	.target(name: "MyPackage", dependencies: []),
-    	.testTarget(name: "MyPackageTests", dependencies: ["Quick", "Nimble"])
-    ]
-)
+),
 ```
 
-#### Linux Support
+Then run `accio update`.
 
-On Linux, you will need to also add a `LinuxMain.swift` at the root of the `Tests` subdirectory. This needs to contain a main struct that calls out to `QCKMain`, like so:
+## [Swift Package Manager](https://github.com/apple/swift-package-manager)
+With the advent of the [swift.org](https://swift.org) open-source project, Swift now has an official, though nascent, package manager tool. Notably, this provides the possibility of using Quick on non-Apple platforms for the first time. Initial steps have been taken to allow using Quick to test projects using the Swift Package Manager, although frequent breakage is expected at this point since the tool is still under heavy development.
 
-```swift
-import XCTest
-import Quick
+Until further documentation has been written, the following repository may be useful as an example of how Quick can be declared as a dependency in a `Package.swift` file for SwiftPM:
 
-@testable import MyPackageTests
+https://github.com/Quick/QuickOnLinuxExample
 
-@main struct Main {
-    static func main() {
-        QCKMain(
-            [], // list of `QuickSpec` subclasses. to pass in.
-            configuration: [], // Optional, list of QuickConfiguration subclasses to pass in. Defaults to empty array.
-            testCases: [] // Optional, list of XCTestCase subclasses to pass in. Defaults to empty array.
-        )
-    }
-}
-```
-
-## (Not Recommended) Running Quick Specs on a Physical iOS Device
+### (Not Recommended) Running Quick Specs on a Physical iOS Device
 
 In order to run specs written in Quick on device, you need to add `Quick.framework` and
 `Nimble.framework` as `Embedded Binaries` to the `Host Application` of the

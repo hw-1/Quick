@@ -3,7 +3,7 @@ import Nimble
 import XCTest
 
 class FunctionalTests_FocusedSpec_SharedExamplesConfiguration: QuickConfiguration {
-    override class func configure(_ configuration: QCKConfiguration) {
+    override class func configure(_ configuration: Configuration) {
         sharedExamples("two passing shared examples") {
             it("has an example that passes (4)") {}
             it("has another example that passes (5)") {}
@@ -35,10 +35,6 @@ class _FunctionalTests_FocusedSpec_Focused: QuickSpec {
             fit("has a focused example that passes (3)") {}
         }
 
-        fit("focused tests can run on the main thread") { @MainActor in
-            expect(Thread.isMainThread).to(beTrue())
-        }
-
         fitBehavesLike("two passing shared examples")
         fitBehavesLike(FunctionalTests_FocusedSpec_Behavior.self) { () -> Void in }
     }
@@ -62,22 +58,15 @@ class _FunctionalTests_FocusedSpec_Unfocused: QuickSpec {
 final class FocusedTests: XCTestCase, XCTestCaseProvider {
     static var allTests: [(String, (FocusedTests) -> () throws -> Void)] {
         return [
-            ("testOnlyFocusedExamplesAreExecuted", testOnlyFocusedExamplesAreExecuted),
+            ("testOnlyFocusedExamplesAreExecuted", testOnlyFocusedExamplesAreExecuted)
         ]
     }
 
     func testOnlyFocusedExamplesAreExecuted() {
-        #if SWIFT_PACKAGE
         let result = qck_runSpecs([
             _FunctionalTests_FocusedSpec_Focused.self,
-            _FunctionalTests_FocusedSpec_Unfocused.self,
+            _FunctionalTests_FocusedSpec_Unfocused.self
         ])
-        #else
-        let result = qck_runSpecs([
-            _FunctionalTests_FocusedSpec_Unfocused.self,
-            _FunctionalTests_FocusedSpec_Focused.self,
-        ])
-        #endif
-        XCTAssertEqual(result?.executionCount, 9)
+        XCTAssertEqual(result?.executionCount, 8)
     }
 }

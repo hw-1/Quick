@@ -1,17 +1,17 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.0
 
 import PackageDescription
 
 let package = Package(
     name: "Quick",
     platforms: [
-        .macOS(.v10_15), .iOS(.v13), .tvOS(.v13)
+        .macOS(.v10_10), .iOS(.v8), .tvOS(.v9)
     ],
     products: [
         .library(name: "Quick", targets: ["Quick"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/Quick/Nimble.git", from: "11.2.0"),
+        .package(url: "https://github.com/Quick/Nimble.git", from: "8.0.0"),
     ],
     targets: {
         var targets: [Target] = [
@@ -26,36 +26,17 @@ let package = Package(
                     "QuickTests/Helpers/QCKSpecRunner.m",
                     "QuickTests/Helpers/QuickTestsBridgingHeader.h",
                     "QuickTests/QuickConfigurationTests.m",
-                    "QuickFocusedTests/Info.plist",
-                    "QuickTests/Info.plist",
-                    "QuickAfterSuiteTests/Info.plist",
                 ]
-            ),
-            .testTarget(
-                name: "QuickIssue853RegressionTests",
-                dependencies: [ "Quick" ]
             ),
         ]
 #if os(macOS)
         targets.append(contentsOf: [
-            .target(name: "QuickObjCRuntime", dependencies: []),
-            .target(
-                name: "Quick",
-                dependencies: [ "QuickObjCRuntime" ],
-                exclude: [
-                    "Info.plist",
-                ]
-            ),
+            .target(name: "QuickSpecBase", dependencies: []),
+            .target(name: "Quick", dependencies: [ "QuickSpecBase" ]),
         ])
 #else
         targets.append(contentsOf: [
-            .target(
-                name: "Quick",
-                dependencies: [],
-                exclude: [
-                    "Info.plist"
-                ]
-            ),
+            .target(name: "Quick", dependencies: []),
         ])
 #endif
         return targets

@@ -9,7 +9,7 @@ overriding the `QuickConfiguration.Type.configure()` class method:
 import Quick
 
 class ProjectDataTestConfiguration: QuickConfiguration {
-  override class func configure(_ configuration: QCKConfiguration) {
+  override class func configure(configuration: Configuration) {
     // ...set options on the configuration object here.
   }
 }
@@ -22,7 +22,7 @@ class ProjectDataTestConfiguration: QuickConfiguration {
 
 QuickConfigurationBegin(ProjectDataTestConfiguration)
 
-+ (void)configure:(QCKConfiguration *configuration) {
++ (void)configure:(Configuration *configuration) {
   // ...set options on the configuration object here.
 }
 
@@ -44,7 +44,7 @@ import Quick
 import Sea
 
 class FinConfiguration: QuickConfiguration {
-  override class func configure(_ configuration: QCKConfiguration) {
+  override class func configure(_ configuration: Configuration) {
     configuration.beforeEach {
       Dorsal.sharedFin().height = 0
     }
@@ -60,7 +60,7 @@ class FinConfiguration: QuickConfiguration {
 
 QuickConfigurationBegin(FinConfiguration)
 
-+ (void)configure:(QCKConfiguration *)configuration {
++ (void)configure:(Configuration *)configuration {
   [configuration beforeEach:^{
     [Dorsal sharedFin].height = 0;
   }];
@@ -78,7 +78,7 @@ example being run:
 import Quick
 
 class SeaConfiguration: QuickConfiguration {
-  override class func configure(_ configuration: QCKConfiguration) {
+  override class func configure(_ configuration: Configuration) {
     configuration.beforeEach { exampleMetadata in
       // ...use the example metadata object to access the current example name, and more.
     }
@@ -93,7 +93,7 @@ class SeaConfiguration: QuickConfiguration {
 
 QuickConfigurationBegin(SeaConfiguration)
 
-+ (void)configure:(QCKConfiguration *)configuration {
++ (void)configure:(Configuration *)configuration {
   [configuration beforeEachWithMetadata:^(ExampleMetadata *data) {
     // ...use the example metadata object to access the current example name, and more.
   }];
